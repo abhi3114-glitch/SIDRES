@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal - redis-cli</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1e1e1e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .window {
+            width: 100%;
+            max-width: 900px;
+            background: #0c0c0c;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .titlebar {
+            background: #323232;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .titlebar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .titlebar-icon {
+            width: 16px;
+            height: 16px;
+            background: #4ec9b0;
+            border-radius: 2px;
+        }
+
+        .titlebar-title {
+            color: #ccc;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 12px;
+        }
+
+        .titlebar-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .titlebar-btn {
+            width: 12px;
+            height: 12px;
+            background: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        .terminal {
+            padding: 15px;
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 500px;
+            color: #cccccc;
+        }
+
+        .line {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .prompt-ps {
+            color: #4ec9b0;
+        }
+
+        .prompt-path {
+            color: #dcdcaa;
+        }
+
+        .prompt-redis {
+            color: #569cd6;
+        }
+
+        .cmd {
+            color: #ce9178;
+        }
+
+        .output {
+            color: #9cdcfe;
+        }
+
+        .string-val {
+            color: #ce9178;
+        }
+
+        .int-val {
+            color: #b5cea8;
+        }
+
+        .ok-val {
+            color: #4ec9b0;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: #cccccc;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="window">
+        <div class="titlebar">
+            <div class="titlebar-left">
+                <div class="titlebar-icon"></div>
+                <span class="titlebar-title">Windows PowerShell</span>
+            </div>
+            <div class="titlebar-buttons">
+                <div class="titlebar-btn">─</div>
+                <div class="titlebar-btn">□</div>
+                <div class="titlebar-btn">×</div>
+            </div>
+        </div>
+        <div class="terminal" id="terminal"></div>
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+
+        const script = [
+            { type: 'ps', text: 'C:\\PROJECTS\\sedris> ', delay: 500 },
+            { type: 'type', text: 'C:\\redis\\redis-cli.exe', delay: 80 },
+            { type: 'enter', delay: 800 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 300 },
+
+            // PING
+            { type: 'type', text: 'PING', delay: 100 },
+            { type: 'enter', delay: 500 },
+            { type: 'response', text: 'PONG', class: 'ok-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // SET
+            { type: 'type', text: 'SET mykey "Hello Sedris!"', delay: 60 },
+            { type: 'enter', delay: 500 },
+            { type: 'response', text: 'OK', class: 'ok-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // GET
+            { type: 'type', text: 'GET mykey', delay: 80 },
+            { type: 'enter', delay: 500 },
+            { type: 'response', text: '"Hello Sedris!"', class: 'string-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // INCR
+            { type: 'type', text: 'SET counter 0', delay: 80 },
+            { type: 'enter', delay: 400 },
+            { type: 'response', text: 'OK', class: 'ok-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 300 },
+
+            { type: 'type', text: 'INCR counter', delay: 80 },
+            { type: 'enter', delay: 400 },
+            { type: 'response', text: '(integer) 1', class: 'int-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 300 },
+
+            { type: 'type', text: 'INCR counter', delay: 80 },
+            { type: 'enter', delay: 400 },
+            { type: 'response', text: '(integer) 2', class: 'int-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 300 },
+
+            // LPUSH
+            { type: 'type', text: 'LPUSH mylist "first" "second" "third"', delay: 50 },
+            { type: 'enter', delay: 500 },
+            { type: 'response', text: '(integer) 3', class: 'int-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // LRANGE
+            { type: 'type', text: 'LRANGE mylist 0 -1', delay: 70 },
+            { type: 'enter', delay: 500 },
+            { type: 'multiline', lines: ['1) "third"', '2) "second"', '3) "first"'], class: 'output', delay: 150 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // HSET
+            { type: 'type', text: 'HSET user name "John" age 30 city "NYC"', delay: 50 },
+            { type: 'enter', delay: 500 },
+            { type: 'response', text: '(integer) 3', class: 'int-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // HGETALL
+            { type: 'type', text: 'HGETALL user', delay: 80 },
+            { type: 'enter', delay: 500 },
+            { type: 'multiline', lines: ['1) "name"', '2) "John"', '3) "age"', '4) "30"', '5) "city"', '6) "NYC"'], class: 'output', delay: 100 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // SADD
+            { type: 'type', text: 'SADD myset "a" "b" "c" "a"', delay: 60 },
+            { type: 'enter', delay: 500 },
+            { type: 'response', text: '(integer) 3', class: 'int-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // SMEMBERS
+            { type: 'type', text: 'SMEMBERS myset', delay: 80 },
+            { type: 'enter', delay: 500 },
+            { type: 'multiline', lines: ['1) "a"', '2) "b"', '3) "c"'], class: 'output', delay: 150 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // ZADD
+            { type: 'type', text: 'ZADD scores 100 "alice" 85 "bob" 95 "charlie"', delay: 45 },
+            { type: 'enter', delay: 500 },
+            { type: 'response', text: '(integer) 3', class: 'int-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // ZRANGE
+            { type: 'type', text: 'ZRANGE scores 0 -1 WITHSCORES', delay: 50 },
+            { type: 'enter', delay: 500 },
+            { type: 'multiline', lines: ['1) "bob"', '2) "85"', '3) "charlie"', '4) "95"', '5) "alice"', '6) "100"'], class: 'output', delay: 100 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // KEYS
+            { type: 'type', text: 'KEYS *', delay: 100 },
+            { type: 'enter', delay: 500 },
+            { type: 'multiline', lines: ['1) "mykey"', '2) "counter"', '3) "mylist"', '4) "user"', '5) "myset"', '6) "scores"'], class: 'output', delay: 100 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // DBSIZE
+            { type: 'type', text: 'DBSIZE', delay: 100 },
+            { type: 'enter', delay: 500 },
+            { type: 'response', text: '(integer) 6', class: 'int-val', delay: 200 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 400 },
+
+            // INFO
+            { type: 'type', text: 'INFO server', delay: 80 },
+            { type: 'enter', delay: 500 },
+            { type: 'multiline', lines: ['# Server', 'sedris_version:1.0.0', 'os:Windows 10', 'arch_bits:64'], class: 'output', delay: 80 },
+            { type: 'output', text: '127.0.0.1:6379> ', delay: 500 },
+
+            { type: 'cursor', delay: 0 },
+        ];
+
+        let currentLine = null;
+
+        function createLine() {
+            const line = document.createElement('div');
+            line.className = 'line';
+            terminal.appendChild(line);
+            return line;
+        }
+
+        async function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function typeText(text, charDelay) {
+            for (const char of text) {
+                currentLine.textContent += char;
+                terminal.scrollTop = terminal.scrollHeight;
+                await sleep(charDelay);
+            }
+        }
+
+        async function runScript() {
+            terminal.innerHTML = '';
+            currentLine = createLine();
+
+            for (const action of script) {
+                await sleep(action.delay);
+
+                switch (action.type) {
+                    case 'ps':
+                        currentLine.innerHTML = `<span class="prompt-ps">PS </span><span class="prompt-path">${action.text.replace('PS ', '')}</span>`;
+                        break;
+                    case 'type':
+                        await typeText(action.text, action.delay);
+                        break;
+                    case 'enter':
+                        currentLine = createLine();
+                        break;
+                    case 'output':
+                        currentLine.innerHTML = `<span class="prompt-redis">${action.text}</span>`;
+                        break;
+                    case 'response':
+                        currentLine.innerHTML = `<span class="${action.class}">${action.text}</span>`;
+                        currentLine = createLine();
+                        break;
+                    case 'multiline':
+                        for (const line of action.lines) {
+                            currentLine.innerHTML = `<span class="${action.class}">${line}</span>`;
+                            currentLine = createLine();
+                            await sleep(action.delay);
+                        }
+                        break;
+                    case 'cursor':
+                        currentLine.innerHTML += '<span class="cursor"></span>';
+                        break;
+                }
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+
+            // Loop after pause
+            await sleep(4000);
+            runScript();
+        }
+
+        runScript();
+    </script>
+</body>
+
+</html>
